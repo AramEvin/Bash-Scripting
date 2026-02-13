@@ -19,3 +19,27 @@ if (( $(echo "$cpu_usage > 80" | bc -l) )); then
 else
     echo -e "${GREEN}${cpu_usage}% (Normal)${NC}"
 fi
+
+echo -ne "Memory Usage:   "
+free -m | awk -v g="${GREEN}" -v r="${RED}" -v n="${NC}" '/^Mem:/ {
+    usage=$3*100/$2;
+    color=(usage > 85 ? r : g);
+    printf "%s%.2fGB / %.2fGB (%d%%)%s\n", color, $3/1024, $2/1024, usage, n
+}'
+
+echo -ne "Disk Usage (/): "
+disk_usage=$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
+if [ "$disk_usage" -gt 90 ]; then
+    echo -e "${RED}${disk_usage}% (Critical!)${NC}"
+else
+    echo -e "${GREEN}${disk_usage}% (Healthy)${NC}"
+fi
+
+load=$(uptime | awk -F'load average:' '{print $2}' | sed 's/,//g')
+echo -e "Load Average:  ${YELLOW}${load}${NC}"
+
+# 5. UPTIME
+echo -ne "System Uptime:  "
+uptime -p | sed 's/up //'
+
+echo -e "${BOLD}==================================================${NC}"
