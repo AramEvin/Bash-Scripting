@@ -1,17 +1,21 @@
 #!/bin/bash
-# system_health.sh - Check system resources
 
-echo "=== System Health Report ==="
-echo "Date: $(date)"
-echo ""
-echo "CPU Usage:"
-top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1"%"}'
-echo ""
-echo "Memory Usage:"
-free -m | awk '/^Mem:/ {printf "%.2fGB / %.2fGB (%d%%)\n", $3/1024, $2/1024, $3*100/$2}'
-echo ""
-echo "Disk Usage:"
-df -h | grep -E '^/dev/' | awk '{print $1 ": " $5 " (" $3 "/" $2 ")"}'
-echo ""
-echo "Load Average:"
-uptime | awk -F'load average:' '{print $2}'
+GREEN='\033[032m'
+RED='\033[031m'
+YELLOW='\033[033m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+echo -e "${BOLD}==================================================${NC}"
+echo -e "${BOLD}   SYSTEM HEALTH REPORT - $(hostname) ${NC}"
+echo -e "   Date: $(date '+%Y-%m-%d %H:%M:%S')"
+echo -e "${BOLD}==================================================${NC}"
+
+cpu_idle=$(top -bn1 | grep "Cpu(s)" | awk '{print $8}')
+cpu_usage=$(echo "100 - $cpu_idle" | bc)
+echo -ne "CPU Usage:      "
+if (( $(echo "$cpu_usage > 80" | bc -l) )); then
+    echo -e "${RED}${cpu_usage}% (High)${NC}"
+else
+    echo -e "${GREEN}${cpu_usage}% (Normal)${NC}"
+fi
